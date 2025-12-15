@@ -90,7 +90,7 @@ export class BitrixService {
     const allItems: any[] = [];
     let start = 0;
     let hasNext = true;
-
+    const sqlFiled: string = 'ufCrm80_1765794457';
     this.logger.log(
       `Fetching all items for entityTypeId ${this.ENTITY_TYPE_ID}...`,
     );
@@ -99,7 +99,7 @@ export class BitrixService {
       const params = {
         entityTypeId: this.ENTITY_TYPE_ID,
         start: start,
-        select: ['id', 'title', 'uf_*'], // Select standard + user fields
+        select: ['id', 'title', sqlFiled], // Select standard + user fields
       };
 
       const result = await this.callMethod('crm.item.list', params);
@@ -112,15 +112,10 @@ export class BitrixService {
       }
 
       const processed = items.map((item) => {
-        // Dynamic search for any field containing 'sql' (case-insensitive)
-        const sqlKey = Object.keys(item).find((key) =>
-          key.toLowerCase().includes('sql'),
-        );
-
         return {
           id: item.id,
           title: item.title,
-          sql: sqlKey ? item[sqlKey] : null,
+          sql: item[sqlFiled],
         };
       });
 
