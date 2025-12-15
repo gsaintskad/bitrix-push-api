@@ -17,14 +17,18 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:bitrix":"jest -- /src/bitrix/bitrix.service.spec.ts"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.1.1",
+    "@nestjs/axios": "^4.0.1",
     "@nestjs/common": "^11.0.1",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.0.1",
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^11.0.1",
+    "axios": "^1.13.2",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
