@@ -3,9 +3,15 @@ import { AppService } from './app.service';
 import { BigQueryModule } from './big-query/big-query.module';
 import { BitrixModule } from './bitrix/bitrix.module';
 import { ConfigModule } from '@nestjs/config';
+import { AppController } from './app.controller';
 
 @Module({
-  imports: [BigQueryModule, BitrixModule, ConfigModule.forRoot({isGlobal:true})],
+  imports: [
+    BigQueryModule,
+    BitrixModule,
+    ConfigModule.forRoot({ isGlobal: true }),
+  ],
   providers: [AppService],
+  controllers: [AppController],
 })
 export class AppModule {}

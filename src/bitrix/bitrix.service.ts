@@ -1,9 +1,26 @@
-import { Injectable, Logger, HttpException, HttpStatus } from '@nestjs/common';
+import {
+  Injectable,
+  Logger,
+  HttpException,
+  HttpStatus,
+  InternalServerErrorException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { AxiosError } from 'axios';
 
+// Define the allowed stages type
+export type BitrixStageStatus = 'success' | 'failed';
+
+// Configuration for your specific Bitrix Entity (SPA or Deal)
+const BITRIX_CONFIG = {
+  entityTypeId: 1196,
+  stages: {
+    success: 'DT1196_88:SUCCESS',
+    failed: 'DT1196_88:FAIL',
+  },
+};
 @Injectable()
 export class BitrixService {
   private readonly logger = new Logger(BitrixService.name);
@@ -86,7 +103,7 @@ export class BitrixService {
   /**
    * Fetches all items from the SPA (Entity Type 1196) using pagination.
    */
-  async getAllQueries(): Promise<any[]> {
+  async getAllQueries(): Promise<{ id: number; title: string; sql: string }[]> {
     const allItems: any[] = [];
     let start = 0;
     let hasNext = true;
@@ -99,7 +116,10 @@ export class BitrixService {
       const params = {
         entityTypeId: this.ENTITY_TYPE_ID,
         start: start,
-        select: ['id', 'title', sqlFiled], // Select standard + user fields
+        select: ['id', 'title', 'stageId', sqlFiled], // Select standard + user fields
+        filter: {
+          stageId: 'DT1196_88:NEW',
+        },
       };
 
       const result = await this.callMethod('crm.item.list', params);
@@ -134,5 +154,48 @@ export class BitrixService {
 
     this.logger.log(`Fetched total ${allItems.length} items.`);
     return allItems;
+  }
+  /**
+   * Moves a Bitrix item to a specific stage based on success/failure status.
+   * @param id - The ID of the item in Bitrix
+   * @param stage - The target status ('success' | 'failed')
+   */
+  async moveItemToStage(id: number, stage: BitrixStageStatus): Promise<void> {
+    const targetStageId = BITRIX_CONFIG.stages[stage];
+
+    if (!targetStageId) {
+      throw new InternalServerErrorException(
+        `No Bitrix stage ID mapped for status: ${stage}`,
+      );
+    }
+
+    this.logger.log(`Moving item ${id} to stage: ${stage} (${targetStageId})`);
+
+    try {
+      // Using crm.item.update for Smart Process Objects (SPA)
+      // If this is a standard Deal, change method to 'crm.deal.update'
+      const payload = {
+        entityTypeId: BITRIX_CONFIG.entityTypeId,
+        id: id,
+        fields: {
+          STAGE_ID: targetStageId,
+          // You might also want to update the 'previous_stage_id' or add comments here
+        },
+      };
+
+      const { data } = await firstValueFrom(
+        this.httpService.post(`${this.webhookUrl}crm.item.update`, payload),
+      );
+
+      if (data.error) {
+        throw new Error(`Bitrix API Error: ${data.error_description}`);
+      }
+
+      this.logger.log(`Successfully moved item ${id} to ${stage}.`);
+    } catch (error) {
+      this.logger.error(`Failed to move item ${id}`, error.message);
+      // Depending on your logic, you might want to re-throw or handle silently
+      throw error;
+    }
   }
 }

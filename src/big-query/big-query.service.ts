@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { BigQuery } from '@google-cloud/bigquery';
 
 @Injectable()
 export class BigQueryService {
   private bigquery: BigQuery;
+  private logger = new Logger('BigQuery');
 
   constructor() {
     // Initialize with the credentials from your JSON file
@@ -13,7 +14,10 @@ export class BigQueryService {
     });
   }
 
-  async runQuery(sql: string): Promise<any[]> {
+  async runQuery(
+    sql: string,
+    payload?: any,
+  ): Promise<{ rows: any[]; payload: any }> {
     try {
       // options can be added here (e.g., location)
       const options = {
@@ -22,14 +26,15 @@ export class BigQueryService {
 
       // Run the query as a job
       const [job] = await this.bigquery.createQueryJob(options);
-      console.log(`Job ${job.id} started.`);
+      this.logger.log(`Job ${job.id} started at:\t${new Date()}.`);
 
       // Wait for the query to finish
       const [rows] = await job.getQueryResults();
+      this.logger.log(`Job ${job.id} done at:\t${new Date()}.`);
 
-      return rows;
+      return { rows: rows!, payload };
     } catch (error) {
-      console.error('BigQuery Error:', error);
+      this.logger.error('BigQuery Error:', error);
       throw new Error(`Query failed: ${error.message}`);
     }
   }
