@@ -5,7 +5,7 @@ import { BitrixModule } from './bitrix/bitrix.module';
 import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [BigQueryModule, BitrixModule, ConfigModule.forRoot()],
+  imports: [BigQueryModule, BitrixModule, ConfigModule.forRoot({isGlobal:true})],
   providers: [AppService],
 })
 export class AppModule {}
