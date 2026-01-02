@@ -19,7 +19,7 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "test:bitrix":"jest -- /src/bitrix/bitrix.service.spec.ts",
-    "test:integrational":"jest -- /src/app.service.spec.ts"
+    "test:integrational":"NODE_OPTIONS=--experimental-vm-modules jest -- /src/app.service.spec.ts"
   },
   "dependencies": {
     "@google-cloud/bigquery": "^8.1.1",

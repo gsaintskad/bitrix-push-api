@@ -17,7 +17,7 @@ describe('AppService', () => {
         BigQueryModule,
         BitrixModule,
         ConfigModule.forRoot({ isGlobal: true }),
-        HttpModule
+        HttpModule,
       ],
       providers: [AppService, BitrixService, BigQueryService],
     })

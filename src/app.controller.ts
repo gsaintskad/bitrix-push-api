@@ -4,7 +4,7 @@ import { Controller, Get, Inject } from '@nestjs/common';
 @Controller('app')
 export class AppController {
   constructor(@Inject() private service: AppService) {}
-  @Get()
+  @Get('/start')
   async start() {
     return await this.service.executeBitrixQueries();
   }

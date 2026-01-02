@@ -14,13 +14,23 @@ export class AppService {
   ) {}
   async executeBitrixQueries() {
     const queries = await this.bitrix.getAllQueries();
-
+    // const queries = [
+    //   {
+    //     id: 1,
+    //     sql: 'SELECT * FROM `up-statistics.Bitrix.wyplaty_sk` ws where ws.wyplata_sk_id=778622 LIMIT 1000',
+    //   },
+    // ];
     const sqls = queries.map((query) => {
+      // Replace newlines with a space to flatten the query safely
+      const cleanSql = query.sql.replace(/\n/g, ' ');
+
       return {
         id: query.id,
-        sql: query.sql.endsWith(';') ? query.sql : `${query.sql};`,
+        sql: cleanSql.endsWith(';') ? cleanSql : `${cleanSql};`,
       };
     });
+    this.logger.log(sqls);
+    // return
     const results = await Promise.allSettled(
       sqls.map((sql) => this.bq.runQuery(sql.sql, sql.id)),
     );
@@ -32,8 +42,7 @@ export class AppService {
       .filter((query) => !successedIds.some((id) => id == query.id))
       .map((query) => query.id);
     this.logger.warn({ failed, successedIds });
-
-
+    // this.logger.log(results)
     //TODO: implement batch updates
     for (const id of successedIds) {
       await this.bitrix.moveItemToStage(id, 'success');
